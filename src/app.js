@@ -64,6 +64,7 @@ function frame(){
   }else{
     state.timeOfDay=live;
   }
+    }
   state._timeOfDay=lerp(state._timeOfDay,state.timeOfDay,.045);
 
   const world=createWorld(state,state._timeOfDay,{W,H});
