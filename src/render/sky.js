@@ -12,16 +12,6 @@ export function renderSky(ctx, world, W, H) {
   let top = seasonShift(world.skyTop, world.paletteBias*.65);
   let bottom = seasonShift(world.skyBottom, world.paletteBias);
 
-  const w = world.weather;
-  if (w === undefined) return;
-
-  if (w === world.weather && false) {}
-
-  if (world.weather === world.weather) {
-    // weather object identity is not useful for string branching here;
-    // the state is carried separately by the renderer through world.weatherName.
-  }
-
   const weatherName = world.weatherName;
   if (weatherName === "rain") {
     top = mix(top,[39,46,58],.34);

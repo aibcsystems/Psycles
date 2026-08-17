@@ -1,5 +1,6 @@
 import { createWorld } from "./core/world.js";
 import { clamp, lerp } from "./core/math.js";
+import { decodeState, persistState } from "./core/share.js";
 import { renderSky, renderCelestials } from "./render/sky.js";
 import { createWeatherParticles, renderWeather } from "./render/weather.js";
 import { createHorizonParticles, renderHorizon } from "./exhibitions/horizon.js";
@@ -25,6 +26,14 @@ const state={
   _timeOfDay:8
 };
 
+// Shared/bookmarked links: values are already whitelisted by decodeState,
+// so it's safe to assign them directly.
+const shared=decodeState();
+if(shared){
+  Object.assign(state,shared);
+  if(shared.timeOfDay!==undefined) state._timeOfDay=state.timeOfDay;
+}
+
 function resize(){
   DPR=Math.min(devicePixelRatio||1,2);
   W=innerWidth;H=innerHeight;
@@ -38,6 +47,17 @@ function resize(){
 addEventListener("resize",resize);
 resize();
 
+// devicePixelRatio can change without a "resize" event firing — e.g.
+// dragging the window between a Retina and standard-DPI monitor, or an
+// OS-level zoom change. matchMedia lets us catch that and re-run resize()
+// so the canvas stays crisp. The listener re-subscribes itself each time
+// since a `resolution` media query only fires once per crossing.
+function watchDPR(){
+  const mq=matchMedia(`(resolution: ${devicePixelRatio}dppx)`);
+  mq.addEventListener("change",()=>{resize();watchDPR();},{once:true});
+}
+watchDPR();
+
 const readout=createReadout();
 
 function announce(){
@@ -45,44 +65,47 @@ function announce(){
   state.weatherName=state.weather[0].toUpperCase()+state.weather.slice(1);
   state.seasonName=state.season[0].toUpperCase()+state.season.slice(1);
   readout.show(state);
+  persistState(state);
 }
 
 setupUI(state,announce);
-setupInteraction();
+setupInteraction(announce);
 
 function liveHour(){
   const now=new Date();
   return now.getHours()+now.getMinutes()/60+now.getSeconds()/3600;
 }
 
-function frame(){
-  if(state.mode==="live"){
-    const live=liveHour();
+let lastFrameTime=performance.now();
 
-    if(Math.floor(live*60)!==Math.floor(state.timeOfDay*60)){
-      state.timeOfDay=live;
-      announce();
-    }else{
-      state.timeOfDay=live;
-    }
-  }
+function frame(now){
+  now = now ?? performance.now();
+  // Normalize elapsed time to a 60fps baseline: dtScale is ~1 at 60Hz,
+  // ~0.5 at 120Hz, ~2 if a frame took twice as long as expected. Capped
+  // so returning from a backgrounded/minimized tab doesn't cause a huge
+  // single-frame jump in particle position.
+  const dtScale=clamp((now-lastFrameTime)/16.6667,0,3);
+  lastFrameTime=now;
 
-  state._timeOfDay=lerp(state._timeOfDay,state.timeOfDay,.045);
+  if(state.mode==="live") state.timeOfDay=liveHour();
+  state._timeOfDay=lerp(state._timeOfDay,state.timeOfDay,clamp(.045*dtScale,0,1));
+  readout.update(state);
 
   const world=createWorld(state,state._timeOfDay,{W,H});
   world.weatherName=state.weather;
   world.seasonName=state.season;
+  world.dtScale=dtScale;
 
   renderSky(ctx,world,W,H);
-  renderCelestials(ctx,world,W,H,performance.now());
+  renderCelestials(ctx,world,W,H,now);
 
   if(state.exhibition==="horizon"){
-    renderHorizon(ctx,world,W,H,performance.now()/16,horizonParticles);
+    renderHorizon(ctx,world,W,H,now/16,horizonParticles);
   }else{
-    renderForest(ctx,world,W,H,performance.now()/16,forestParticles);
+    renderForest(ctx,world,W,H,now/16,forestParticles);
   }
 
-  renderWeather(ctx,world,weatherParticles,W,H,performance.now()/16);
+  renderWeather(ctx,world,weatherParticles,W,H,now/16);
   requestAnimationFrame(frame);
 }
 

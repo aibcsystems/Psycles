@@ -41,8 +41,9 @@ export function renderHorizon(ctx, world, W,H,frame,particles) {
 
   // distant birds: absent during rain/fog and winter
   if(world.weatherName==="clear" && world.season.vegetation>.25 && world.solar.daylight>.08){
+    const dt = world.dtScale ?? 1;
     particles.birds.forEach(b=>{
-      b.x += b.speed*world.motion;
+      b.x += b.speed*world.motion*dt;
       if(b.x>W+30)b.x=-30;
       const flap=Math.sin(frame*.11+b.phase)*2.5;
       ctx.strokeStyle="rgba(22,25,29,.42)";

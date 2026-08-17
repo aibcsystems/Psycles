@@ -35,10 +35,11 @@ export function renderForest(ctx,world,W,H,frame,particles){
   if(world.seasonName!=="winter"){
     const leaf=world.seasonName==="autumn" ? "rgba(201,123,48,.68)" : "rgba(119,170,91,.55)";
     ctx.fillStyle=leaf;
+    const dt = world.dtScale ?? 1;
     particles.leaves.forEach(l=>{
-      l.p+=.014*world.motion;
-      l.x += l.s + Math.sin(l.p)*.28*world.wind;
-      l.y += .08 + world.wind*.08;
+      l.p+=.014*world.motion*dt;
+      l.x += (l.s + Math.sin(l.p)*.28*world.wind)*dt;
+      l.y += (.08 + world.wind*.08)*dt;
       if(l.x>W)l.x=-5;
       if(l.y>H)l.y=-5;
       ctx.beginPath();ctx.arc(l.x,l.y,l.r,0,Math.PI*2);ctx.fill();

@@ -10,13 +10,14 @@ export function createWeatherParticles(W,H) {
 
 export function renderWeather(ctx, world, particles, W,H,frame) {
   const weather = world.weatherName;
+  const dt = world.dtScale ?? 1;
 
   if(weather === "rain"){
     ctx.strokeStyle = `rgba(218,226,238,${.18 + world.weather.rain*.18})`;
     ctx.lineWidth=1;
     particles.rain.forEach(d=>{
-      d.y += d.s*world.wind*.75;
-      d.x -= 1.4*world.wind;
+      d.y += d.s*world.wind*.75*dt;
+      d.x -= 1.4*world.wind*dt;
       if(d.y>H+20){d.y=-20;d.x=Math.random()*W;}
       ctx.beginPath(); ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-3,d.y+d.len); ctx.stroke();
     });
@@ -25,9 +26,9 @@ export function renderWeather(ctx, world, particles, W,H,frame) {
   if(weather === "snow"){
     ctx.fillStyle="rgba(255,255,255,.72)";
     particles.snow.forEach(s=>{
-      s.p += .012*world.motion;
-      s.x += Math.sin(s.p)*.35 + world.wind*.12;
-      s.y += s.s*world.motion;
+      s.p += .012*world.motion*dt;
+      s.x += (Math.sin(s.p)*.35 + world.wind*.12)*dt;
+      s.y += s.s*world.motion*dt;
       if(s.y>H+8){s.y=-8;s.x=Math.random()*W;}
       ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
     });
@@ -35,7 +36,7 @@ export function renderWeather(ctx, world, particles, W,H,frame) {
 
   if(weather === "fog"){
     particles.mist.forEach((m,i)=>{
-      m.p += .0015*world.motion;
+      m.p += .0015*world.motion*dt;
       const x=m.x+Math.sin(m.p+i)*45;
       const y=m.y+Math.sin(m.p*.7+i)*8;
       const g=ctx.createRadialGradient(x,y,0,x,y,m.w);

@@ -1,3 +1,5 @@
+import { fmtTime } from "../core/math.js";
+
 export function setupUI(state, onChange) {
   const exhibition=document.querySelector("#exhibition");
   const weather=document.querySelector("#weather");
@@ -7,14 +9,14 @@ export function setupUI(state, onChange) {
   const timeValue=document.querySelector("#time-value");
 
   function sync(){
+    exhibition.value=state.exhibition;
+    weather.value=state.weather;
+    season.value=state.season;
+    mode.value=state.mode;
+    slider.value=state.timeOfDay;
     slider.disabled=state.mode==="live";
     slider.style.opacity=state.mode==="live" ? .35 : 1;
-    timeValue.textContent=fmt(state.timeOfDay);
-  }
-  function fmt(h){
-    h=((h%24)+24)%24;
-    const hh=Math.floor(h), mm=Math.round((h-hh)*60);
-    return `${String(hh%24).padStart(2,"0")}:${String(mm%60).padStart(2,"0")}`;
+    timeValue.textContent=fmtTime(state.timeOfDay);
   }
 
   exhibition.onchange=e=>{state.exhibition=e.target.value;onChange();};
