@@ -57,15 +57,19 @@ function liveHour(){
 
 function frame(){
   if(state.mode==="live"){
-  const live=liveHour();
-  if(Math.floor(live*60)!==Math.floor(state.timeOfDay*60)){
-    state.timeOfDay=live;
-    announce();
-  }else{
-    state.timeOfDay=live;
-  }
+    const live=liveHour();
+
+    if(Math.floor(live*60)!==Math.floor(state.timeOfDay*60)){
+      state.timeOfDay=live;
+      announce();
+    }else{
+      state.timeOfDay=live;
     }
+  }
+
   state._timeOfDay=lerp(state._timeOfDay,state.timeOfDay,.045);
+
+  const world=createWorld(state,state._timeOfDay,{W,H});
 
   const world=createWorld(state,state._timeOfDay,{W,H});
   world.weatherName=state.weather;
