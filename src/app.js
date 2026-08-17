@@ -70,8 +70,6 @@ function frame(){
   state._timeOfDay=lerp(state._timeOfDay,state.timeOfDay,.045);
 
   const world=createWorld(state,state._timeOfDay,{W,H});
-
-  const world=createWorld(state,state._timeOfDay,{W,H});
   world.weatherName=state.weather;
   world.seasonName=state.season;
 
